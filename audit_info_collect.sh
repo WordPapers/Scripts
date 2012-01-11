@@ -5,7 +5,13 @@
 AUDITDIR=/export/home/audit
 HOSTNAME=`hostname`
 # Add recipients here separated by spaces
-MAILTO="joe.searcy@globalpay.com"
+MAILTO="change@me"
+#check to make sure the user of the script has changed the mailto address list
+if [ $MAILTO = "change@me" ]
+then
+	echo "Please change the mailto address before running this script" >&2
+	exit
+fi
 DATAFILE=$AUDITDIR/audit_capture_`date '+%Y%m%d_%H%M'`.txt
 # Below, add full paths to files that need to be included, separated by spaces
 FILELIST="/etc/shadow /etc/security/passwd /etc/passwd /etc/group /etc/default/login /etc/default/passwd /etc/profile /etc/inet/inetd.conf /etc/inetd.conf /etc/ssh/sshd_config /etc/pam.conf /var/adm/sulog /etc/cron.d/cron.allow /etc/cron.d/cron.deny /var/sadm/patch /etc/security/user /etc/sudoers /etc/security/pwdalg.cfg"
