@@ -16,7 +16,7 @@
 #               Joe Searcy -> Initial script
 #                               Joe Searcy -> Added filter for non-vSCSI disks
 #                               Joe Searcy -> Added logic for single path vSCSI disks
-#  							Joe Searcy -> Fixed vSCSI count array arithmetic
+#  				Joe Searcy -> Fixed vSCSI count array arithmetic
 #
 
 #### Variables ####
