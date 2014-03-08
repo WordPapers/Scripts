@@ -1,5 +1,5 @@
 #!/usr/bin/ksh93
-
+# set -x
 #
 # PowerVM Multi-vSCSI Path Balancing Script
 # by: Joe M. Searcy
@@ -16,15 +16,18 @@
 #               01-18-2013 - Joe Searcy -> Initial script
 #               01-18-2013 - Joe Searcy -> Added filter for non-vSCSI disks
 #               01-18-2013 - Joe Searcy -> Added logic for single path vSCSI disks
-#  	        01-25-2013 - Joe Searcy -> Fixed vSCSI count array arithmetic
+#  	        	01-25-2013 - Joe Searcy -> Fixed vSCSI count array arithmetic
 #               01-27-2013 - Joe Searcy -> Added some additional comments and configured to 
 #                                          perform changes instead of only echoing to stdout
+#  	        	03-07-2014 - Joe Searcy -> Added debug mode and fixed variable values (stuff never removed from testing)
 #
 
 #### Variables ####
 
-DISKLIST=`cat disk_list.out | awk '{ print $1 }'`
-VSCSILIST=`cat /tmp/gp_vscsi_balance/lspath.out | awk '{ print $3 }' | sed s/vscsi//`
+DEBUG=echo
+LSPATH_OUT=`lspath`
+DISKLIST=`echo ${LSPATH_OUT} | awk '{print $2}' | sort -u  | grep "vscsi"`
+VSCSILIST=`echo ${LSPATH_OUT} | awk '{print $3}' | sort -u | grep "vscsi" | sed 's/vscsi//'`
 
 
 #### Create Arrays ####
@@ -51,7 +54,7 @@ typeset -A path2Array
 
                 do
         
-                        PATH1=`cat /tmp/gp_vscsi_balance/lspath.out | grep "$hdisk " | head -1 | awk '{ print $3 }' | sed s/vscsi//`
+                        PATH1=`echo ${LSPATH_OUT} | grep "${hdisk} " | head -1 | awk '{ print $3 }' | sed s/vscsi//`
                         path1Array[$hdisk]=$PATH1
                 
         done
@@ -63,7 +66,7 @@ typeset -A path2Array
 
                 do
                         
-                        PATH2=`cat /tmp/gp_vscsi_balance/lspath.out | grep  "$hdisk " | tail -1 | awk '{ print $3 }' | sed s/vscsi//`
+                        PATH2=`echo ${LSPATH_OUT} | grep  "$hdisk " | tail -1 | awk '{ print $3 }' | sed s/vscsi//`
                         path2Array[$hdisk]=$PATH2
                 
         done
@@ -97,23 +100,20 @@ typeset -A path2Array
                 
                                                 then
                                         
-                                                        echo
                                                         echo "$hdisk uses \"vscsi${path1Array[$hdisk]}\" & \"vscsi${path2Array[$hdisk]}\""
                                                         
                                                         #### Begin DEBUG ####
                                                         #echo "Path 1 count: ${vscsiCountArray[$PATH1]}"
                                                         #echo "Path 2 count: ${vscsiCountArray[$PATH2]}"
                                                         #echo
-                                                        #echo "chpath -l $hdisk -p vscsi$PATH1 -a priority=1"
-                                                        #echo "chpath -l $hdisk -p vscsi$PATH2 -a priority=2"
                                                         #### End DEBUG ####
 
                                                         echo
                                                         
                                                         # Actually change path priority (comment out for DEBUG)
 
-                                                        chpath -l $hdisk -p vscsi$PATH1 -a priority=1
-                                                        chpath -l $hdisk -p vscsi$PATH1 -a priority=2
+                                                        ${DEBUG} chpath -l $hdisk -p vscsi$PATH1 -a priority=1
+                                                        ${DEBUG} chpath -l $hdisk -p vscsi$PATH2 -a priority=2
                                 
                                                         ((vscsiCountArray[$PATH1]+=1))
                                         
@@ -129,23 +129,19 @@ typeset -A path2Array
                                 
                                         else
                 
-                                                        echo
                                                         echo "$hdisk uses \"vscsi${path1Array[$hdisk]}\" & \"vscsi${path2Array[$hdisk]}\""
                                                         
                                                         #### Begin DEBUG ####
                                                         #echo "Path 1 count: ${vscsiCountArray[$PATH1]}"
                                                         #echo "Path 2 count: ${vscsiCountArray[$PATH2]}"
-                                                        #echo
-                                                        #echo "chpath -l $hdisk -p vscsi$PATH1 -a priority=2"
-                                                        #echo "chpath -l $hdisk -p vscsi$PATH2 -a priority=1"
                                                         #### End DEBUG ####
 
                                                         echo
 
                                                         # Actually change path priority (comment out for DEBUG)
 
-                                                        echo "chpath -l $hdisk -p vscsi$PATH1 -a priority=2"
-                                                        echo "chpath -l $hdisk -p vscsi$PATH2 -a priority=1"
+                                                        ${DEBUG} chpath -l $hdisk -p vscsi$PATH1 -a priority=2
+                                                        ${DEBUG} chpath -l $hdisk -p vscsi$PATH2 -a priority=1
                                 
                                                         ((vscsiCountArray[$PATH2]+=1))
                                         
@@ -159,7 +155,9 @@ typeset -A path2Array
                                                         echo
                                 
                                         fi
+										
                                         
                         fi
                 
         done
+		
